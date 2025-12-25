@@ -14,40 +14,53 @@ export default function RegisterPage() {
     const [password, setPassword] = useState("")
     const [firstName, setFirstName] = useState("")
     const [lastName, setLastName] = useState("")
+    const [loading, setLoading] = useState(false)
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault()
-        // TODO: Connect to actual backend API
-        const res = await fetch('http://localhost:3001/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, firstName, lastName })
-        })
+        setLoading(true)
+        try {
+            const res = await fetch('http://localhost:3001/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, firstName, lastName })
+            })
 
-        if (res.ok) {
-            alert('Account created! Please login.')
-            router.push('/login')
-        } else {
-            alert('Registration failed')
+            if (res.ok) {
+                alert('Account created! Please login.')
+                router.push('/login')
+            } else {
+                alert('Registration failed. Please try again.')
+            }
+        } catch (error) {
+            alert('An error occurred.')
+        } finally {
+            setLoading(false)
         }
     }
 
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-            <Card className="w-full max-w-sm">
-                <CardHeader>
-                    <CardTitle className="text-2xl">Create Account</CardTitle>
+        <div className="flex h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-900 relative overflow-hidden">
+            {/* Background Decoration */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none opacity-50 mix-blend-multiply dark:mix-blend-screen animate-blob" />
+
+            <Card className="w-full max-w-md z-10 shadow-2xl border-slate-200 dark:border-slate-800 backdrop-blur-sm bg-white/80 dark:bg-slate-900/80">
+                <CardHeader className="space-y-1">
+                    <CardTitle className="text-3xl font-bold tracking-tight text-center">Create account</CardTitle>
+                    <p className="text-center text-slate-500 dark:text-slate-400">
+                        Join us to get support and track your tickets
+                    </p>
                 </CardHeader>
-                <CardContent className="grid gap-4">
-                    <form onSubmit={handleRegister}>
-                        <div className="grid grid-cols-2 gap-2 mb-2">
+                <CardContent className="grid gap-4 pt-4">
+                    <form onSubmit={handleRegister} className="grid gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="first">First Name</Label>
-                                <Input id="first" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                                <Input id="first" value={firstName} onChange={(e) => setFirstName(e.target.value)} required className="h-11" placeholder="John" />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="last">Last Name</Label>
-                                <Input id="last" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                                <Input id="last" value={lastName} onChange={(e) => setLastName(e.target.value)} required className="h-11" placeholder="Doe" />
                             </div>
                         </div>
                         <div className="grid gap-2">
@@ -55,13 +68,14 @@ export default function RegisterPage() {
                             <Input
                                 id="email"
                                 type="email"
-                                placeholder="m@example.com"
+                                placeholder="name@example.com"
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                className="h-11"
                             />
                         </div>
-                        <div className="grid gap-2 mt-4">
+                        <div className="grid gap-2">
                             <Label htmlFor="password">Password</Label>
                             <Input
                                 id="password"
@@ -69,14 +83,17 @@ export default function RegisterPage() {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                className="h-11"
                             />
                         </div>
-                        <Button className="w-full mt-6" type="submit">Sign Up</Button>
+                        <Button className="w-full h-11 mt-2 text-base" type="submit" disabled={loading}>
+                            {loading ? "Creating account..." : "Sign Up"}
+                        </Button>
                     </form>
                 </CardContent>
                 <CardFooter>
-                    <p className="text-sm text-center w-full">
-                        Already have an account? <Link href="/login" className="underline">Sign in</Link>
+                    <p className="text-sm text-center w-full text-slate-500">
+                        Already have an account? <Link href="/login" className="font-semibold text-primary hover:underline underline-offset-4">Sign in</Link>
                     </p>
                 </CardFooter>
             </Card>
