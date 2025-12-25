@@ -18,11 +18,11 @@ export class TicketsService {
     ) { }
 
     async create(user: User, createTicketDto: any): Promise<Ticket> {
-        const ticket: Ticket = this.ticketsRepository.create({
+        const ticket = this.ticketsRepository.create({
             ...createTicketDto,
             requester: user,
             status: TicketStatus.NEW
-        });
+        }) as Ticket;
         const savedTicket = (await this.ticketsRepository.save(ticket)) as Ticket;
 
         // Send confirmation email
