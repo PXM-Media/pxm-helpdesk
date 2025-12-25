@@ -23,7 +23,7 @@ export class TicketsService {
             requester: user,
             status: TicketStatus.NEW
         });
-        const savedTicket = await this.ticketsRepository.save(ticket);
+        const savedTicket: Ticket = await this.ticketsRepository.save(ticket);
 
         // Send confirmation email
         await this.emailService.sendEmail(
@@ -55,3 +55,4 @@ export class TicketsService {
         await this.ticketsRepository.update(id, updateTicketDto);
         return this.findOne(id);
     }
+}
