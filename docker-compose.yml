@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # Database
+  db:
+    image: mariadb:10.11
+    container_name: helpdesk_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: helpdesk
+      MYSQL_USER: helpdesk
+      MYSQL_PASSWORD: helpdeskpassword
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - helpdesk_net
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -u helpdesk -phelpdeskpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (Queues & Cache)
+  redis:
+    image: redis:alpine
+    container_name: helpdesk_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - helpdesk_net
+
+  # Object Storage (MinIO)
+  minio:
+    image: minio/minio
+    container_name: helpdesk_minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - helpdesk_net
+
+  # Create default bucket for MinIO
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/helpdesk-uploads;
+      /usr/bin/mc anonymous set download myminio/helpdesk-uploads;
+      exit 0;
+      "
+    networks:
+      - helpdesk_net
+
+  # Search Engine (Meilisearch)
+  search:
+    image: getmeili/meilisearch:v1.3
+    container_name: helpdesk_search
+    restart: always
+    environment:
+      MEILI_MASTER_KEY: masterKey123
+    ports:
+      - "7700:7700"
+    volumes:
+      - search_data:/meili_data
+    networks:
+      - helpdesk_net
+
+  # Email Testing (Mailpit)
+  mailpit:
+    image: axllent/mailpit
+    container_name: helpdesk_mailpit
+    restart: always
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # UI
+    networks:
+      - helpdesk_net
+
+  # We will add api and web services later, they are currently run locally via npm
+
+volumes:
+  db_data:
+  minio_data:
+  search_data:
+
+networks:
+  helpdesk_net:
+    driver: bridge
